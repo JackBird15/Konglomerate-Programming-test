@@ -5,24 +5,27 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     Rigidbody2D rb;
-    public GameObject feet;
     public float moveSpeed;
+
+    [Header("Jump Variables")]
     public float jumpForce;
-    public float lerpSpeedIncrease = 1;
-    public float lerpSpeedDecrease;
     public float jumpForceMin;
     public float jumpForceMax;
-    bool spaceHeldDown;
+    public float lerpSpeedIncrease = 1;
+    public float lerpSpeedDecrease;
 
+    [Header("Gravity Modifiers")]
     float fallMultiplier = 2.5f;
     float lowJumpMultiplier = 2f;
 
+    [Header("GroundCheck")]
+    public GameObject feet;
     public bool grounded;
     public float radiusCircle;
     public float mayJump;
     public float mayJumpTime = 0.1f;
     public UIJumpBar uiJumpBar;
-
+   public bool jump;
     Animator anim;
 
     // Start is called before the first frame update
@@ -73,12 +76,12 @@ public class PlayerController : MonoBehaviour
         //if jump force has reached maximum it will not peak any higher
         if (Input.GetKey(KeyCode.Space) && grounded)
         {
+            anim.SetBool("Prejump", true);
             if (jumpForce >= jumpForceMax)
             {
                 jumpForce = jumpForceMax;
                 return;
             }
-
             UpdateUiBar(jumpForceMax, lerpSpeedIncrease);
         }
         else
@@ -89,10 +92,10 @@ public class PlayerController : MonoBehaviour
         //after charge up, add up force to the players velocity, and set the UI bar back to 0
         if (Input.GetKeyUp(KeyCode.Space) && grounded)
         {
+            jump = true;
+            anim.SetBool("Prejump", false);
             anim.SetTrigger("Jumps");
             rb.velocity = Vector2.up * jumpForce;
-           // jumpForce = 5;
-            //uiJumpBar.GetCurrentFill(jumpForce, jumpForceMin, jumpForceMax);
         }
 
         //increasing gravity over time to make the player feel less floaty
@@ -119,13 +122,24 @@ public class PlayerController : MonoBehaviour
         {
             grounded = true;
             mayJump = mayJumpTime;
-        }else if(colliders.Length <= 0)
+        } else if (colliders.Length <= 0)
         {
-            //allows for a tiny window of time to still be able to jump once leaving the collider
-            mayJump -= Time.fixedDeltaTime;
-            if(mayJump <=0)
+            if (!jump)
+            {
+                //allows for a tiny window of time to still be able to jump once leaving the collider
+                mayJump -= Time.fixedDeltaTime;
+
+                if (mayJump <= 0)
+                {
+                    grounded = false;
+                    jump = false;
+                    print("MayJump");
+                }
+            }else if (jump)
             {
                 grounded = false;
+                print("NOITMayJump");
+                jump = false;
             }
         }
     }
