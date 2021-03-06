@@ -8,24 +8,27 @@ public class PlayerController : MonoBehaviour
     public GameObject feet;
     public float moveSpeed;
     public float jumpForce;
-    public float jumpTimeMultiplier = 1;
+    public float lerpSpeedIncrease = 1;
+    public float lerpSpeedDecrease;
     public float jumpForceMin;
     public float jumpForceMax;
+    bool spaceHeldDown;
 
     float fallMultiplier = 2.5f;
     float lowJumpMultiplier = 2f;
+
     public bool grounded;
-
     public float radiusCircle;
-
+    public float mayJump;
+    public float mayJumpTime = 0.1f;
     public UIJumpBar uiJumpBar;
-    public float lerpSpeed;
 
     Animator anim;
 
     // Start is called before the first frame update
     void Start()
     {
+        mayJump = mayJumpTime;
         rb = GetComponent<Rigidbody2D>();
         uiJumpBar.GetCurrentFill(jumpForce, jumpForceMin,jumpForceMax);
         anim = GetComponent<Animator>();
@@ -34,14 +37,14 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        GroundCheck();
         Jump();
         Movement();
     }
 
     private void FixedUpdate()
     {
-       
+     
+        GroundCheck();
     }
 
     void Movement()
@@ -70,33 +73,18 @@ public class PlayerController : MonoBehaviour
         //if jump force has reached maximum it will not peak any higher
         if (Input.GetKey(KeyCode.Space) && grounded)
         {
-           /* if (!grounded)
-            {
-                jumpForce = 5;
-               uiJumpBar.GetCurrentFill(jumpForce, jumpForceMin, jumpForceMax);
-                return;
-            }*/
-
             if (jumpForce >= jumpForceMax)
             {
                 jumpForce = jumpForceMax;
                 return;
             }
 
-            jumpForce += Time.fixedDeltaTime * jumpTimeMultiplier;
-            uiJumpBar.GetCurrentFill(jumpForce, jumpForceMin, jumpForceMax);
+            UpdateUiBar(jumpForceMax, lerpSpeedIncrease);
         }
-        else {
-            jumpForce = Mathf.MoveTowards(jumpForce, jumpForceMin, Time.deltaTime * lerpSpeed);
-            uiJumpBar.GetCurrentFill(jumpForce, jumpForceMin, jumpForceMax);
+        else
+        { 
+            UpdateUiBar(jumpForceMin, lerpSpeedDecrease);
         }
-
-        //when in the air, set the ui bar back to minimum jumpforce    
-       /* if (!grounded)
-        {
-            jumpForce = Mathf.MoveTowards(jumpForce, jumpForceMin, Time.deltaTime * lerpSpeed);
-            uiJumpBar.GetCurrentFill(jumpForce, jumpForceMin, jumpForceMax);
-        }*/
 
         //after charge up, add up force to the players velocity, and set the UI bar back to 0
         if (Input.GetKeyUp(KeyCode.Space) && grounded)
@@ -120,7 +108,6 @@ public class PlayerController : MonoBehaviour
 
     void GroundCheck()
     {
-        grounded = false;
         //bit shift the index of the layer to get a bit mask
         //layer8 = player
         int layerMask = 1 << 8;
@@ -129,6 +116,23 @@ public class PlayerController : MonoBehaviour
         //check for any colliders that come in contact with the overlap sphere
         Collider2D[] colliders = Physics2D.OverlapCircleAll(feet.transform.position, radiusCircle, ~layerMask);
         if (colliders.Length > 0)
+        {
             grounded = true;
+            mayJump = mayJumpTime;
+        }else if(colliders.Length <= 0)
+        {
+            //allows for a tiny window of time to still be able to jump once leaving the collider
+            mayJump -= Time.fixedDeltaTime;
+            if(mayJump <=0)
+            {
+                grounded = false;
+            }
+        }
+    }
+
+    void UpdateUiBar(float desiredNumber, float lerpSpeed)
+    {
+        jumpForce = Mathf.MoveTowards(jumpForce, desiredNumber, Time.deltaTime * lerpSpeed);
+        uiJumpBar.GetCurrentFill(jumpForce, jumpForceMin, jumpForceMax);
     }
 }
