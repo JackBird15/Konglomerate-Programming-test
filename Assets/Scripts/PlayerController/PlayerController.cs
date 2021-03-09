@@ -34,10 +34,13 @@ public class PlayerController : MonoBehaviour
     // Start is called before the first frame update
     void Awake()
     {
-        mayJump = mayJumpTime;
+        //grabbing all components from the GO
         rb = GetComponent<Rigidbody2D>();
-        uiJumpBar.GetCurrentFill(jumpForce, jumpForceMin,jumpForceMax, false);
         anim = GetComponent<Animator>();
+        //set our mayjump time
+        mayJump = mayJumpTime;
+        //setting Jump UI bar
+        uiJumpBar.GetCurrentFill(jumpForce, jumpForceMin,jumpForceMax, false);
     }
 
     // Update is called once per frame
@@ -49,7 +52,6 @@ public class PlayerController : MonoBehaviour
 
     private void FixedUpdate()
     {
-     
         GroundCheck();
     }
 
@@ -59,9 +61,11 @@ public class PlayerController : MonoBehaviour
         transform.position = new Vector3(Mathf.Clamp(transform.position.x, -xClamp, xClamp),
            transform.position.y, transform.position.z);
 
+        //grabbing Axis so A=-1 and D = 1
         float horizontalMove = Input.GetAxis("Horizontal") * moveSpeed * Time.deltaTime;
         transform.position += new Vector3(horizontalMove, 0, 0);
 
+        //rotates 2D sprite to face correct way
         if (horizontalMove > 0)
         {
             transform.eulerAngles = new Vector3(0, 0, 0);
@@ -71,6 +75,7 @@ public class PlayerController : MonoBehaviour
             transform.eulerAngles = new Vector3(0, 180, 0);
         }
 
+        //If not moving, set Anim to Idle
         if (horizontalMove != 0)
         {
             anim.SetBool("Run", true);
@@ -154,6 +159,7 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    //Function to update Jumpbar
     void UpdateUiBar(float desiredNumber, float lerpSpeed, bool enlarge)
     {
         jumpForce = Mathf.MoveTowards(jumpForce, desiredNumber, Time.deltaTime * lerpSpeed);

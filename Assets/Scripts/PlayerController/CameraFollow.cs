@@ -21,10 +21,11 @@ public class CameraFollow : MonoBehaviour
     // Update is called once per frame
     void LateUpdate()
     {
+        //checks if there is a target set
         if (target)
         {
-            Vector3 posNoZ = transform.position + offset;
-            Vector3 targetDirection = (target.transform.position - posNoZ);
+            Vector3 posOffset = transform.position + offset;
+            Vector3 targetDirection = (target.transform.position - posOffset);
             float interpVelocity = targetDirection.magnitude * followSpeed;
             targetPos = (transform.position) + (targetDirection.normalized * interpVelocity * Time.deltaTime);
             transform.position = Vector3.Lerp(transform.position, targetPos, 0.25f);

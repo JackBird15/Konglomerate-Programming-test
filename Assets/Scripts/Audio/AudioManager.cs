@@ -8,6 +8,7 @@ public class AudioManager : MonoBehaviour
     // Start is called before the first frame update
     void Awake()
     {
+        //Give our audio manager specific variables to edit
         foreach(Sound s in sounds)
         {
            s.source = gameObject.AddComponent<AudioSource>();
@@ -18,6 +19,8 @@ public class AudioManager : MonoBehaviour
         }
     }
 
+    //check the array and play the audio track
+    //checks the name is correct so no error
     public void Play(string name)
     {
         Sound s = Array.Find(sounds, sound => sound.name == name);

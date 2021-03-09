@@ -9,11 +9,13 @@ public class CoinCollect : MonoBehaviour
 
     public void Start()
     {
+        //finding CoinUi in the scene
         cUI = GameObject.FindGameObjectWithTag("CoinUI").GetComponent<CoinCollectUI>();
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
+        //if the player interacts with the coin, update the coinUI, play SFX and destroy
         if (collision.gameObject.CompareTag("Player"))
         {
             cUI.UpdateCoinCounter();
