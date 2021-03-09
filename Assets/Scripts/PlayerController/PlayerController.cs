@@ -14,6 +14,8 @@ public class PlayerController : MonoBehaviour
     public float jumpForceMax;
     public float lerpSpeedIncrease = 1;
     public float lerpSpeedDecrease;
+    public float timer;
+    public float distanceToTop;
 
     [Header("Gravity Modifiers")]
     float fallMultiplier = 2.5f;
@@ -88,14 +90,20 @@ public class PlayerController : MonoBehaviour
         //if jump force has reached maximum it will not peak any higher
         if (Input.GetKey(KeyCode.Space) && grounded)
         {
-
             anim.SetBool("Prejump", true);
             if (jumpForce >= jumpForceMax)
             {
                 jumpForce = jumpForceMax;
                 return;
             }
+
             UpdateUiBar(jumpForceMax, lerpSpeedIncrease, true);
+            //if player taps the space bar, the jumpforce will always be 5
+            timer += Time.deltaTime;
+            if (timer <= 0.1f)
+            {
+                jumpForce = jumpForceMin;
+            }
         }
         else
         {
@@ -111,7 +119,7 @@ public class PlayerController : MonoBehaviour
             anim.SetTrigger("Jumps");
             audioManager.Play("Jump");
             rb.velocity = Vector2.up * jumpForce;
-            print(rb.velocity);
+            timer = 0f;
         }
 
         //increasing gravity over time to make the player feel less floaty
@@ -123,6 +131,34 @@ public class PlayerController : MonoBehaviour
         {
             rb.velocity += Vector2.up * Physics2D.gravity.y * (lowJumpMultiplier - 1) * Time.deltaTime;
         }
+
+        //catch missed jumps
+        if (!grounded)
+        {
+        int layerMask = 1 << 8;
+            RaycastHit2D hit;
+            hit = Physics2D.Raycast(feet.transform.position, transform.forward, 1f, ~layerMask);
+            if (hit.collider != null)
+            {
+                float hitPointY = hit.point.y;
+                float colliderY = hit.collider.transform.position.y/* - hit.collider.bounds.size.y*/;
+
+                print(hit.collider.name);
+                print(hitPointY + ";" + colliderY);
+                distanceToTop = colliderY- hitPointY;
+                print(distanceToTop);
+
+
+                //  print(distanceToTop);
+                if (distanceToTop < 0.1)
+                {
+                    //  print("hitpoint" + hitPoint.y);
+                    //  print("CollBounds" + colliderBound.y);
+                    print("Move");
+                }
+            }
+        }
+        //bumped head correction
     }
 
     void GroundCheck()
@@ -149,15 +185,20 @@ public class PlayerController : MonoBehaviour
                 {
                     grounded = false;
                     jump = false;
-                    print("MayJump");
                 }
             }else if (jump)
             {
                 grounded = false;
-                print("NOITMayJump");
                 jump = false;
             }
         }
+
+       
+    }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+    
     }
 
     //Function to update Jumpbar
