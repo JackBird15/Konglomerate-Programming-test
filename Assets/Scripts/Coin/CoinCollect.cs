@@ -4,20 +4,11 @@ using UnityEngine;
 
 public class CoinCollect : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+    public AudioManager audioManager;
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
+        audioManager.Play("Coin");
         Destroy(this.gameObject);
     }
 }

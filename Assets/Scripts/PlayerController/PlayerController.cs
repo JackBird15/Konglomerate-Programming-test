@@ -6,6 +6,7 @@ public class PlayerController : MonoBehaviour
 {
     Rigidbody2D rb;
     public float moveSpeed;
+    public float xClamp;
 
     [Header("Jump Variables")]
     public float jumpForce;
@@ -27,13 +28,15 @@ public class PlayerController : MonoBehaviour
     public UIJumpBar uiJumpBar;
    public bool jump;
     Animator anim;
-
+    public AudioManager audioManager;
+    
+    
     // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
         mayJump = mayJumpTime;
         rb = GetComponent<Rigidbody2D>();
-        uiJumpBar.GetCurrentFill(jumpForce, jumpForceMin,jumpForceMax);
+        uiJumpBar.GetCurrentFill(jumpForce, jumpForceMin,jumpForceMax, false);
         anim = GetComponent<Animator>();
     }
 
@@ -52,6 +55,10 @@ public class PlayerController : MonoBehaviour
 
     void Movement()
     {
+        //Cant run off the side
+        transform.position = new Vector3(Mathf.Clamp(transform.position.x, -xClamp, xClamp),
+           transform.position.y, transform.position.z);
+
         float horizontalMove = Input.GetAxis("Horizontal") * moveSpeed * Time.deltaTime;
         transform.position += new Vector3(horizontalMove, 0, 0);
 
@@ -76,17 +83,19 @@ public class PlayerController : MonoBehaviour
         //if jump force has reached maximum it will not peak any higher
         if (Input.GetKey(KeyCode.Space) && grounded)
         {
+
             anim.SetBool("Prejump", true);
             if (jumpForce >= jumpForceMax)
             {
                 jumpForce = jumpForceMax;
                 return;
             }
-            UpdateUiBar(jumpForceMax, lerpSpeedIncrease);
+            UpdateUiBar(jumpForceMax, lerpSpeedIncrease, true);
         }
         else
-        { 
-            UpdateUiBar(jumpForceMin, lerpSpeedDecrease);
+        {
+            anim.SetBool("Prejump", false);
+            UpdateUiBar(jumpForceMin, lerpSpeedDecrease, false);
         }
 
         //after charge up, add up force to the players velocity, and set the UI bar back to 0
@@ -95,6 +104,7 @@ public class PlayerController : MonoBehaviour
             jump = true;
             anim.SetBool("Prejump", false);
             anim.SetTrigger("Jumps");
+            audioManager.Play("Jump");
             rb.velocity = Vector2.up * jumpForce;
         }
 
@@ -144,9 +154,9 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    void UpdateUiBar(float desiredNumber, float lerpSpeed)
+    void UpdateUiBar(float desiredNumber, float lerpSpeed, bool enlarge)
     {
         jumpForce = Mathf.MoveTowards(jumpForce, desiredNumber, Time.deltaTime * lerpSpeed);
-        uiJumpBar.GetCurrentFill(jumpForce, jumpForceMin, jumpForceMax);
+        uiJumpBar.GetCurrentFill(jumpForce, jumpForceMin, jumpForceMax, enlarge);
     }
 }
