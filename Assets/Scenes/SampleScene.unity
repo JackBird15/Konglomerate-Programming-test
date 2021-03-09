@@ -6512,7 +6512,7 @@ SpriteRenderer:
   m_Size: {x: 19.2, y: 10.8}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 1
+  m_WasSpriteAssigned: 0
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!4 &1505690700
@@ -9256,6 +9256,17 @@ PrefabInstance:
       propertyPath: lerpSpeedIncrease
       value: 15
       objectReference: {fileID: 0}
+    - target: {fileID: 2959040814274773600, guid: 3a37cd6416596f14bbb5f41d2a0f26c9,
+        type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 2976041059057689810, guid: 8c55401505f0ce54c8962106721b5837,
+        type: 3}
+    - target: {fileID: 2959040814274773600, guid: 3a37cd6416596f14bbb5f41d2a0f26c9,
+        type: 3}
+      propertyPath: m_WasSpriteAssigned
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 2959040814274773601, guid: 3a37cd6416596f14bbb5f41d2a0f26c9,
         type: 3}
       propertyPath: m_RootOrder
@@ -9535,7 +9546,7 @@ SpriteRenderer:
   m_Size: {x: 19.2, y: 10.8}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 1
+  m_WasSpriteAssigned: 0
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!4 &2051721248
