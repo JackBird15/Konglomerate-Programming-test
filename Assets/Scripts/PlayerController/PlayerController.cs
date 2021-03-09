@@ -111,6 +111,7 @@ public class PlayerController : MonoBehaviour
             anim.SetTrigger("Jumps");
             audioManager.Play("Jump");
             rb.velocity = Vector2.up * jumpForce;
+            print(rb.velocity);
         }
 
         //increasing gravity over time to make the player feel less floaty
