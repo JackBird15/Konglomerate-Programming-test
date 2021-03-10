@@ -142,42 +142,15 @@ public class PlayerController : MonoBehaviour
         }
 
         //increasing gravity over time to make the player feel less floaty
-        if(rb.velocity.y < 0)
+        if (rb.velocity.y < 0)
         {
             rb.velocity += Vector2.up * Physics2D.gravity.y * (fallMultiplier - 1) * Time.fixedDeltaTime;
 
-        } else if (rb.velocity.y > 0 && !Input.GetKeyUp(KeyCode.Space))
+        }
+        else if (rb.velocity.y > 0 && !Input.GetKeyUp(KeyCode.Space))
         {
             rb.velocity += Vector2.up * Physics2D.gravity.y * (lowJumpMultiplier - 1) * Time.fixedDeltaTime;
         }
-
-        //catch missed jumps
-       /* if (!grounded)
-        {
-        int layerMask = 1 << 8;
-            RaycastHit2D hit;
-            hit = Physics2D.Raycast(feet.transform.position, transform.forward, 1f, ~layerMask);
-            if (hit.collider != null)
-            {
-                float hitPointY = hit.point.y;
-                float colliderY = hit.collider.transform.position.y - hit.collider.bounds.size.y;
-
-                print(hit.collider.name);
-                print(hitPointY + ";" + colliderY);
-                distanceToTop = colliderY- hitPointY;
-                print(distanceToTop);
-
-
-                //  print(distanceToTop);
-                if (distanceToTop < 0.1)
-                {
-                    //  print("hitpoint" + hitPoint.y);
-                    //  print("CollBounds" + colliderBound.y);
-                    print("Move");
-                }
-            }
-        }*/
-        //bumped head correction
     }
 
     void GroundCheck()
