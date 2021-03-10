@@ -1,25 +1,20 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 public class CoinCollect : MonoBehaviour
 {
-    public AudioManager audioManager;
-    public CoinCollectUI cUI;
-
-    public void Start()
-    {
-        //finding CoinUi in the scene
-        cUI = GameObject.FindGameObjectWithTag("CoinUI").GetComponent<CoinCollectUI>();
-    }
+    public static event Action UpdateCoinUi;
+    public static event Action<string> PlayAudio;
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
         //if the player interacts with the coin, update the coinUI, play SFX and destroy
         if (collision.gameObject.CompareTag("Player"))
         {
-            cUI.UpdateCoinCounter();
-            audioManager.Play("Coin");
+            UpdateCoinUi?.Invoke();
+            PlayAudio?.Invoke("Coin");
             Destroy(this.gameObject);
         }
     }

@@ -19,7 +19,7 @@ public class CameraFollow : MonoBehaviour
     }
 
     // Update is called once per frame
-    void LateUpdate()
+   private void LateUpdate()
     {
         //checks if there is a target set
         if (target)

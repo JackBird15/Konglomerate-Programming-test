@@ -6,10 +6,14 @@ public class AudioManager : MonoBehaviour
 {
     public Sound[] sounds;
     // Start is called before the first frame update
-    void Awake()
+   private void Awake()
     {
+        PlayerController.PlayAudio += Play;
+        CoinCollect.PlayAudio += Play;
+        Menu.PlayAudio += Play;
+
         //Give our audio manager specific variables to edit
-        foreach(Sound s in sounds)
+        foreach (Sound s in sounds)
         {
            s.source = gameObject.AddComponent<AudioSource>();
            s.source.clip = s.clip;
@@ -27,6 +31,5 @@ public class AudioManager : MonoBehaviour
         if (s == null)
             return;
         s.source.Play();
-        
     }
 }

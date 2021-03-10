@@ -1,22 +1,35 @@
 ﻿using System.Collections;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-[ExecuteInEditMode()]
 public class UIJumpBar : MonoBehaviour
 {
+    public static event Action<UIJumpBar> OnUpdateUIBar;
+
     public GameObject sliderGO;
     public Slider sliderBar;
 
-    //Function called in PlayerController
-    public void GetCurrentFill(float current, float min, float maximum, bool enlarge)
+    private void OnEnable()
     {
+        PlayerController.UpdateUI += GetCurrentFill;
+    }
+
+    private void OnDisable()
+    {
+        PlayerController.UpdateUI -= GetCurrentFill;
+    }
+
+    //Function called in PlayerController
+    private void GetCurrentFill(float current, float min, float max, bool enlarge)
+    {
+        OnUpdateUIBar?.Invoke(this);
+
         //Set the values of the slider bar
         sliderBar.minValue = min;
-        sliderBar.maxValue = maximum;
+        sliderBar.maxValue = max;
         sliderBar.value = current;
-
         //make ui bigger as jump size increases or decreases
         if (enlarge)
         {

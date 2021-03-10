@@ -1,58 +1,74 @@
 ﻿using System.Collections;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
+    public static event Action<float, float, float, bool> UpdateUI;
+    public static event Action<string> PlayAudio;
+
     Rigidbody2D rb;
     public float moveSpeed;
-    public float xClamp;
+    public Vector2 invisibleWallsLocation;
 
     [Header("Jump Variables")]
     public float jumpForce;
     public float jumpForceMin;
     public float jumpForceMax;
+    private bool enlarge;
+
     public float lerpSpeedIncrease = 1;
     public float lerpSpeedDecrease;
-    public float timer;
-    public float distanceToTop;
-    bool jump;
-    bool jumpKey;
-    bool jumpHold;
+    private float timer;
+    private bool jump;
+    private bool jumpKey;
+    private bool jumpHold;
 
     [Header("Gravity Modifiers")]
     float fallMultiplier = 2.5f;
     float lowJumpMultiplier = 2f;
 
     [Header("GroundCheck")]
-    public GameObject feet;
+    public Vector2 feetLocation = new Vector2(0,-0.36f);
     public bool grounded;
     public float radiusCircle;
-    public float mayJump;
     public float mayJumpTime = 0.1f;
-    public UIJumpBar uiJumpBar;
+    private float mayJump;
     
     Animator anim;
-    public AudioManager audioManager;
-    
     
     // Start is called before the first frame update
-    void Awake()
+    private void OnEnable()
     {
+        print("YeET");
         //grabbing all components from the GO
-        rb = GetComponent<Rigidbody2D>();
-        anim = GetComponent<Animator>();
+
+        if (GetComponent<Rigidbody2D>() != null)
+        {
+            rb = GetComponent<Rigidbody2D>();
+        }
+        else { Debug.LogError("PLEASE ATTACH RIGIDBODY2D"); }
+
+        if (GetComponent<Animator>() != null)
+        {
+            anim = GetComponent<Animator>();
+        }
+        else
+        {
+            Debug.LogError("PLEASE ATTACH ANIMATOR");
+            return;
+        }
         //set our mayjump time
         mayJump = mayJumpTime;
-        //setting Jump UI bar
-        uiJumpBar.GetCurrentFill(jumpForce, jumpForceMin,jumpForceMax, false);
     }
 
     // Update is called once per frame
-    void Update()
+    private void Update()
     {
         JumpControls();
         Movement();
+        UpdateUI?.Invoke(jumpForce, jumpForceMin, jumpForceMax, enlarge);
     }
 
     private void FixedUpdate()
@@ -61,11 +77,12 @@ public class PlayerController : MonoBehaviour
         GroundCheck();
     }
 
-    void Movement()
+    private void Movement()
     {
+
         //Cant run off the side
-        transform.position = new Vector3(Mathf.Clamp(transform.position.x, -xClamp, xClamp),
-           transform.position.y, transform.position.z);
+        transform.position = new Vector3(Mathf.Clamp(transform.position.x, -invisibleWallsLocation.x, invisibleWallsLocation.x),
+           Mathf.Clamp(transform.position.y, -invisibleWallsLocation.y, invisibleWallsLocation.y), transform.position.z);
 
         //grabbing Axis so A=-1 and D = 1
         float horizontalMove = Input.GetAxis("Horizontal") * moveSpeed * Time.deltaTime;
@@ -82,40 +99,52 @@ public class PlayerController : MonoBehaviour
         }
 
         //If not moving, set Anim to Idle
-        if (horizontalMove != 0)
+        if (horizontalMove != 0 && anim !=null)
         {
             anim.SetBool("Run", true);
         } else { anim.SetBool("Run", false); }
     }
 
-    void JumpControls()
+    //Since Physics should always go in Fixed update, the actual inputs still need to be in update, 
+    //or else you may be a frame or 2 out when clicking a button
+    //The KeyUp function almost never lands when in fixedUpdate, so a bool is triggered here, and then set to false in fixedupdate when the function is called
+    private void JumpControls()
     {
-        if (Input.GetKeyUp(KeyCode.Space))
+        if (Input.GetKeyUp(KeyCode.Space) && grounded)
         {
             jumpKey = true;
         }
-        else { jumpHold = false; }
+       
 
-        if (Input.GetKey(KeyCode.Space))
+        if (Input.GetKey(KeyCode.Space) && grounded)
         {
             jumpHold = true;
         }
+        else
+        {
+            jumpHold = false;
+        }
     }
 
-    void Jump()
+    private void Jump()
     {
         //hold down to increase jump force and UI bar
-        //if jump force has reached maximum it will not peak any higher
-        if (jumpHold && grounded)
+        if (jumpHold)
         {
+            //enlarge the UI
+            enlarge = true;
+
+            if (anim != null)
             anim.SetBool("Prejump", true);
+
+            //if jump force has reached maximum it will not peak any higher
             if (jumpForce >= jumpForceMax)
             {
                 jumpForce = jumpForceMax;
                 return;
             }
+            LerpJump(jumpForceMax, lerpSpeedIncrease);
 
-            UpdateUiBar(jumpForceMax, lerpSpeedIncrease, true);
             //if player taps the space bar, the jumpforce will always be 5
             timer += Time.fixedDeltaTime;
             if (timer <= 0.1f)
@@ -125,17 +154,27 @@ public class PlayerController : MonoBehaviour
         }
         else
         {
-            anim.SetBool("Prejump", false);
-            UpdateUiBar(jumpForceMin, lerpSpeedDecrease, false);
+            //stop enlarging the UI
+            enlarge = false;
+
+            if (anim != null)
+                anim.SetBool("Prejump", false);
+
+            LerpJump(jumpForceMin, lerpSpeedDecrease);
         }
 
         //after charge up, add up force to the players velocity, and set the UI bar back to 0
-        if (jumpKey && grounded)
+        if (jumpKey)
         {
             jump = true;
-            anim.SetBool("Prejump", false);
-            anim.SetTrigger("Jumps");
-            audioManager.Play("Jump");
+
+            if (anim != null)
+            {
+                anim.SetBool("Prejump", false);
+                anim.SetTrigger("Jumps");
+            }
+
+            PlayAudio?.Invoke("Jump");
             rb.velocity = Vector2.up * jumpForce;
             timer = 0f;
             jumpKey = false;
@@ -153,7 +192,7 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    void GroundCheck()
+    private void GroundCheck()
     {
         //bit shift the index of the layer to get a bit mask
         //layer8 = player
@@ -161,7 +200,7 @@ public class PlayerController : MonoBehaviour
 
         //~ makes it raycast everything except layer 8
         //check for any colliders that come in contact with the overlap sphere
-        Collider2D[] colliders = Physics2D.OverlapCircleAll(feet.transform.position, radiusCircle, ~layerMask);
+        Collider2D[] colliders = Physics2D.OverlapCircleAll(new Vector2(transform.position.x, transform.position.y+ feetLocation.y), radiusCircle, ~layerMask);
         if (colliders.Length > 0)
         {
             grounded = true;
@@ -184,19 +223,11 @@ public class PlayerController : MonoBehaviour
                 jump = false;
             }
         }
-
-       
     }
 
-    private void OnCollisionEnter2D(Collision2D collision)
-    {
-    
-    }
-
-    //Function to update Jumpbar
-    void UpdateUiBar(float desiredNumber, float lerpSpeed, bool enlarge)
+    //Function to Lerp the Jump
+    private void LerpJump( float desiredNumber, float lerpSpeed)
     {
         jumpForce = Mathf.MoveTowards(jumpForce, desiredNumber, Time.deltaTime * lerpSpeed);
-        uiJumpBar.GetCurrentFill(jumpForce, jumpForceMin, jumpForceMax, enlarge);
     }
 }

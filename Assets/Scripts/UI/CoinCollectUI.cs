@@ -11,12 +11,13 @@ public class CoinCollectUI : MonoBehaviour
     TMP_Text amount;
 
     
-    void Start()
+   private void OnEnable()
     {
+        CoinCollect.UpdateCoinUi += UpdateCoinCounter;
         amount = GetComponentInChildren<TMP_Text>();
-        coins = GameObject.FindGameObjectsWithTag("Coin");
         //collecting all the coins in the scene
         //we can add as many coins as we want without having to come back to the script and editing it
+        coins = GameObject.FindGameObjectsWithTag("Coin");
         foreach (GameObject coin in coins)
         {
             maxCoins++;
@@ -25,7 +26,7 @@ public class CoinCollectUI : MonoBehaviour
     }
 
     //when updated, it adds 1 to the UI 
-    public void UpdateCoinCounter()
+    private void UpdateCoinCounter()
     {
         currentCoins++;
         amount.text = ":" + currentCoins + "/" + maxCoins;

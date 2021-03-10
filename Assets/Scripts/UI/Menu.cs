@@ -1,9 +1,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 public class Menu : MonoBehaviour
 {
+    public static event Action<string> PlayAudio;
+
     public GameObject player;
     public GameObject[] coins;
     public GameObject gameUI;
@@ -13,37 +16,31 @@ public class Menu : MonoBehaviour
 
 
    //grabbing Go and UI and turning them off
-    void Awake()
+    private void Awake()
     {
         player.SetActive(false);
-        coins = GameObject.FindGameObjectsWithTag("Coin");
-        foreach (GameObject coin in coins)
-        coin.SetActive(false);
-
         gameUI.SetActive(false);
         cameraFollow.enabled = false;
     }
     //starting Background music
-    public void Start()
+    private void Start()
     {
-        audioManager.Play("Music");
+        PlayAudio?.Invoke("Music"); 
     }
 
     //When Activated, turns everything back on and starts the game, turns menu off
-    public void PlayGame()
+    private void PlayGame()
     {
-        audioManager.Play("Click");
+        PlayAudio?.Invoke("Click");
         mainMenu.SetActive(false);
         player.SetActive(true);
-        gameUI.SetActive(true);
         cameraFollow.enabled =true;
-        foreach (GameObject coin in coins)
-            coin.SetActive(true);
+        gameUI.SetActive(true);
     }
 
-    public void Quit()
+    private void Quit()
     {
-        audioManager.Play("Click");
+        PlayAudio?.Invoke("Click");
         Application.Quit();
     }
 }
