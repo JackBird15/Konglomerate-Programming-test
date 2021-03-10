@@ -16,6 +16,9 @@ public class PlayerController : MonoBehaviour
     public float lerpSpeedDecrease;
     public float timer;
     public float distanceToTop;
+    bool jump;
+    bool jumpKey;
+    bool jumpHold;
 
     [Header("Gravity Modifiers")]
     float fallMultiplier = 2.5f;
@@ -28,7 +31,7 @@ public class PlayerController : MonoBehaviour
     public float mayJump;
     public float mayJumpTime = 0.1f;
     public UIJumpBar uiJumpBar;
-   public bool jump;
+    
     Animator anim;
     public AudioManager audioManager;
     
@@ -48,12 +51,13 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        Jump();
+        JumpControls();
         Movement();
     }
 
     private void FixedUpdate()
     {
+        Jump();
         GroundCheck();
     }
 
@@ -84,11 +88,25 @@ public class PlayerController : MonoBehaviour
         } else { anim.SetBool("Run", false); }
     }
 
+    void JumpControls()
+    {
+        if (Input.GetKeyUp(KeyCode.Space))
+        {
+            jumpKey = true;
+        }
+        else { jumpHold = false; }
+
+        if (Input.GetKey(KeyCode.Space))
+        {
+            jumpHold = true;
+        }
+    }
+
     void Jump()
     {
         //hold down to increase jump force and UI bar
         //if jump force has reached maximum it will not peak any higher
-        if (Input.GetKey(KeyCode.Space) && grounded)
+        if (jumpHold && grounded)
         {
             anim.SetBool("Prejump", true);
             if (jumpForce >= jumpForceMax)
@@ -99,7 +117,7 @@ public class PlayerController : MonoBehaviour
 
             UpdateUiBar(jumpForceMax, lerpSpeedIncrease, true);
             //if player taps the space bar, the jumpforce will always be 5
-            timer += Time.deltaTime;
+            timer += Time.fixedDeltaTime;
             if (timer <= 0.1f)
             {
                 jumpForce = jumpForceMin;
@@ -112,7 +130,7 @@ public class PlayerController : MonoBehaviour
         }
 
         //after charge up, add up force to the players velocity, and set the UI bar back to 0
-        if (Input.GetKeyUp(KeyCode.Space) && grounded)
+        if (jumpKey && grounded)
         {
             jump = true;
             anim.SetBool("Prejump", false);
@@ -120,20 +138,21 @@ public class PlayerController : MonoBehaviour
             audioManager.Play("Jump");
             rb.velocity = Vector2.up * jumpForce;
             timer = 0f;
+            jumpKey = false;
         }
 
         //increasing gravity over time to make the player feel less floaty
         if(rb.velocity.y < 0)
         {
-            rb.velocity += Vector2.up * Physics2D.gravity.y * (fallMultiplier - 1) * Time.deltaTime;
+            rb.velocity += Vector2.up * Physics2D.gravity.y * (fallMultiplier - 1) * Time.fixedDeltaTime;
 
         } else if (rb.velocity.y > 0 && !Input.GetKeyUp(KeyCode.Space))
         {
-            rb.velocity += Vector2.up * Physics2D.gravity.y * (lowJumpMultiplier - 1) * Time.deltaTime;
+            rb.velocity += Vector2.up * Physics2D.gravity.y * (lowJumpMultiplier - 1) * Time.fixedDeltaTime;
         }
 
         //catch missed jumps
-        if (!grounded)
+       /* if (!grounded)
         {
         int layerMask = 1 << 8;
             RaycastHit2D hit;
@@ -141,7 +160,7 @@ public class PlayerController : MonoBehaviour
             if (hit.collider != null)
             {
                 float hitPointY = hit.point.y;
-                float colliderY = hit.collider.transform.position.y/* - hit.collider.bounds.size.y*/;
+                float colliderY = hit.collider.transform.position.y - hit.collider.bounds.size.y;
 
                 print(hit.collider.name);
                 print(hitPointY + ";" + colliderY);
@@ -157,7 +176,7 @@ public class PlayerController : MonoBehaviour
                     print("Move");
                 }
             }
-        }
+        }*/
         //bumped head correction
     }
 
